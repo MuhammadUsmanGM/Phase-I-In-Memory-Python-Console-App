@@ -1,0 +1,14 @@
+[project]
+name = "phase1-todo-app"
+version = "0.1.0"
+description = "Phase I: In-Memory Python Console App for Todo Evolution project"
+authors = [{name = "Your Name", email = "your.email@example.com"}]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+phase1-app = "phase_i_in_memory_python_console_app.main:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

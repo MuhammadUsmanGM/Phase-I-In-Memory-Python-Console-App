@@ -1,0 +1,72 @@
+# Todo Management Agent Skill
+
+## Description
+This skill provides todo management capabilities that can be used by AI agents to add, view, update, delete, and mark tasks as complete.
+
+## Functions
+
+### add_task(title, description=None)
+- Adds a new task to the todo list
+- Parameters:
+  - title (required): The task title (1-200 characters)
+  - description (optional): The task description (max 1000 characters)
+- Returns: Task ID of the newly created task
+
+### view_tasks()
+- Retrieves all tasks from the todo list
+- Returns: List of tasks with ID, title, description, and completion status
+
+### update_task(task_id, title=None, description=None)
+- Updates an existing task's title and/or description
+- Parameters:
+  - task_id (required): The ID of the task to update
+  - title (optional): New title for the task
+  - description (optional): New description for the task
+- Returns: Boolean indicating success
+
+### delete_task(task_id)
+- Deletes a task from the todo list
+- Parameters:
+  - task_id (required): The ID of the task to delete
+- Returns: Boolean indicating success
+
+### mark_task_complete(task_id)
+- Toggles the completion status of a task
+- Parameters:
+  - task_id (required): The ID of the task to mark
+- Returns: Boolean indicating success
+
+### get_task(task_id)
+- Retrieves a specific task by ID
+- Parameters:
+  - task_id (required): The ID of the task to retrieve
+- Returns: Task object with all properties
+
+## Usage Examples
+
+### In AI Agent Context:
+```
+user: "Add a task called 'Buy groceries'"
+skill: add_task(title="Buy groceries")
+
+user: "Show me all my tasks"
+skill: view_tasks()
+
+user: "Update task 1 to 'Buy milk and bread'"
+skill: update_task(task_id=1, title="Buy milk and bread")
+
+user: "Delete task 3"
+skill: delete_task(task_id=3)
+
+user: "Mark task 2 as complete"
+skill: mark_task_complete(task_id=2)
+```
+
+## Business Rules
+- Task titles must be 1-200 characters
+- Task descriptions must be max 1000 characters
+- All operations are performed in-memory (no persistence between sessions)
+- Task IDs are auto-incrementing integers
+
+## Implementation
+This skill interfaces with the in-memory storage system implemented in the Todo Console App, making the same operations available programmatically to AI agents.
