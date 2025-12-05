@@ -4,7 +4,6 @@ from .storage import TaskStorage
 from .models import Task
 from rich.console import Console
 from rich.table import Table
-from rich.prompt import Prompt
 from rich import print as rprint
 from prompt_toolkit import Application
 from prompt_toolkit.key_binding import KeyBindings
@@ -26,9 +25,7 @@ from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import (
     radiolist_dialog,
-    yes_no_dialog,
-    input_dialog,
-    message_dialog
+    yes_no_dialog
 )
 
 
@@ -190,195 +187,238 @@ class TodoCLI:
 
     def show_simple_input(self, prompt_text: str):
         """
-        Show a simple input dialog using prompt_toolkit
+        Show a simple input using the main app interface instead of dialog
         """
         try:
-            result = input_dialog(
-                title="Todo App",
-                text=prompt_text,
-                style=Style([('frame.label', 'bg:#ffffff #000000')])
-            ).run()
-            return result or ""
+            from prompt_toolkit import prompt
+            user_input = prompt(f"{prompt_text}: ")
+            return user_input or ""
         except:
             return "quit"
 
-    def show_message(self, title: str, text: str):
+    def show_message(self, title: str, text: str, pause=True):
         """
-        Show a message dialog
+        Show a message using the console instead of a separate dialog
         """
-        try:
-            message_dialog(
-                title=title,
-                text=text
-            ).run()
-        except:
-            pass
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - {title}[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+        rprint(text)
+        if pause:
+            input(f"\nPress Enter to return to menu...")
 
     def display_help(self):
         """
-        Display help information with available commands in a styled format using dialog.
+        Display help information with available commands in a styled format using console.
         """
-        help_text = "Available Commands:\n\n"
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - Help[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+
         for cmd, info in self.commands.items():
             aliases = ', '.join(info['alias']) if info['alias'] else 'none'
-            help_text += f"{cmd} - {info['description']}\n"
-            help_text += f"  aliases: {aliases}\n\n"
+            rprint(f"[bold]{cmd}[/] - {info['description']}")
+            rprint(f"  [dim]aliases: {aliases}[/]\n")
 
-        help_text += "Press Enter to return to main menu"
-        self.show_message("Todo Console App Help", help_text)
+        input(f"\nPress Enter to return to menu...")
 
     def handle_add(self):
         """
-        Handle the add command with dialog interface.
+        Handle the add command with console interface.
         """
-        title = self.show_simple_input("Enter task title:")
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - Add Task[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+
+        title = input("Enter task title: ").strip()
         if not title:
-            self.show_message("Error", "Title is required")
+            rprint(f"\n[{self.styles['error']}]Error: Title is required[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
-        description = self.show_simple_input("Enter task description (optional):")
+        description = input("Enter task description (optional): ").strip()
+        description = description if description else None
 
         try:
-            task_id = self.storage.add_task(title, description if description else None)
-            self.show_message("Success", f"Task added successfully with ID: {task_id}")
+            task_id = self.storage.add_task(title, description)
+            rprint(f"\n[{self.styles['success']}]Task added successfully with ID: {task_id}[/]")
         except ValueError as e:
-            self.show_message("Error", f"Error: {e}")
+            rprint(f"\n[{self.styles['error']}]Error: {e}[/]")
+
+        input(f"\nPress Enter to return to menu...")
 
     def handle_view(self):
         """
         Handle the view/list command with a styled table.
         """
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - Your Tasks[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+
         tasks = self.storage.get_all_tasks()
 
         if not tasks:
-            self.show_message("Info", "No tasks found")
+            rprint(f"[{self.styles['info']}]No tasks found[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
-        # Create a formatted text for tasks - show more of description
-        tasks_text = "ID  | Status | Title                    | Description\n"
-        tasks_text += "----|--------|------------------------|-----------------------------\n"
+        table = Table(title="Your Tasks", title_style="bold blue")
+        table.add_column("ID", style="bold", justify="center")
+        table.add_column("Status", justify="center")
+        table.add_column("Title", style="cyan")
+        table.add_column("Description", style="dim")
 
         for task in tasks:
             status = "✓" if task.completed else "○"
-            title = task.title[:20] + ".." if len(task.title) > 20 else task.title
-            description = task.description or ""
-            # Show more of description (up to 60 chars) to reduce truncation
-            if len(description) > 60:
-                description = description[:57] + "..."
-            tasks_text += f"{task.id:<3} | {status:^6} | {title:<22} | {description}\n"
+            status_style = self.styles['completed'] if task.completed else self.styles['pending']
+            title = task.title if len(task.title) <= 25 else task.title[:22] + "..."
+            description = task.description if task.description and len(task.description) <= 30 else (task.description[:27] + "..." if task.description else "")
 
-        # Show tasks in a scrollable dialog that allows full viewing
-        self.show_message("Your Tasks", tasks_text)
+            table.add_row(
+                str(task.id),
+                f"[{status_style}]{status}[/]",
+                f"[{self.styles['title'] if task.completed else 'white'}]{title}[/]",
+                f"[{self.styles['description']}]{description}[/]"
+            )
+
+        self.console.print(table)
+        input(f"\nPress Enter to return to menu...")
 
     def handle_update(self):
         """
-        Handle the update command with dialog interface.
+        Handle the update command with console interface.
         """
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - Update Task[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+
         # Show available tasks to update
         tasks = self.storage.get_all_tasks()
         if not tasks:
-            self.show_message("Info", "No tasks available")
+            rprint(f"[{self.styles['info']}]No tasks available[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
-        task_list = [(str(task.id), f"{task.id}: {task.title}") for task in tasks]
-        if not task_list:
-            self.show_message("Info", "No tasks available")
-            return
+        rprint("Available tasks:\n")
+        for i, task in enumerate(tasks):
+            status = "✓" if task.completed else "○"
+            status_style = self.styles['completed'] if task.completed else self.styles['pending']
+            rprint(f"[{i+1}] [{status_style}]{status}[/] {task.id}: {task.title}")
 
-        # For simplicity, let's use a simple input to select task ID
-        task_id_str = self.show_simple_input("Enter task ID to update:")
+        print()  # Add a blank line
+        task_id_str = input("Enter task ID to update: ").strip()
         try:
             task_id = int(task_id_str)
         except ValueError:
-            self.show_message("Error", "Task ID must be a number")
+            rprint(f"\n[{self.styles['error']}]Error: Task ID must be a number[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
         # Get the current task
         current_task = self.storage.get_task(task_id)
         if not current_task:
-            self.show_message("Error", f"Task with ID {task_id} not found")
+            rprint(f"\n[{self.styles['error']}]Error: Task with ID {task_id} not found[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
         # Get new values
-        new_title = self.show_simple_input(f"Enter new title (current: {current_task.title}):")
-        new_description = self.show_simple_input(f"Enter new description (current: {current_task.description or 'None'}):")
-
-        # Use current values if user didn't provide new ones
-        if new_title == "":
-            new_title = current_task.title
-        if new_description == "":
-            new_description = current_task.description
+        new_title = input(f"Enter new title (current: '{current_task.title}'): ").strip()
+        new_description = input(f"Enter new description (current: '{current_task.description or 'None'}'): ").strip()
 
         # Update the task
-        success = self.storage.update_task(task_id, new_title, new_description if new_description != current_task.description else None)
+        success = self.storage.update_task(task_id,
+                                          new_title if new_title else None,
+                                          new_description if new_description else None)
         if success:
-            self.show_message("Success", f"Task with ID {task_id} updated successfully")
+            rprint(f"\n[{self.styles['success']}]Task with ID {task_id} updated successfully[/]")
         else:
-            self.show_message("Error", f"Could not update task with ID {task_id}")
+            rprint(f"\n[{self.styles['error']}]Could not update task with ID {task_id}[/]")
+
+        input(f"\nPress Enter to return to menu...")
 
     def handle_delete(self):
         """
-        Handle the delete command with dialog interface.
+        Handle the delete command with console interface.
         """
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - Delete Task[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+
         # Show available tasks to delete
         tasks = self.storage.get_all_tasks()
         if not tasks:
-            self.show_message("Info", "No tasks available")
+            rprint(f"[{self.styles['info']}]No tasks available[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
-        task_list = [(str(task.id), f"{task.id}: {task.title}") for task in tasks]
-        if not task_list:
-            self.show_message("Info", "No tasks available")
-            return
+        rprint("Available tasks:\n")
+        for i, task in enumerate(tasks):
+            status = "✓" if task.completed else "○"
+            status_style = self.styles['completed'] if task.completed else self.styles['pending']
+            rprint(f"[{i+1}] [{status_style}]{status}[/] {task.id}: {task.title}")
 
-        # Get task ID to delete
-        task_id_str = self.show_simple_input("Enter task ID to delete:")
+        print()  # Add a blank line
+        task_id_str = input("Enter task ID to delete: ").strip()
         try:
             task_id = int(task_id_str)
         except ValueError:
-            self.show_message("Error", "Task ID must be a number")
+            rprint(f"\n[{self.styles['error']}]Error: Task ID must be a number[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
         success = self.storage.delete_task(task_id)
         if success:
-            self.show_message("Success", f"Task with ID {task_id} has been deleted")
+            rprint(f"\n[{self.styles['success']}]Task with ID {task_id} has been deleted[/]")
         else:
-            self.show_message("Error", f"Task with ID {task_id} not found")
+            rprint(f"\n[{self.styles['error']}]Task with ID {task_id} not found[/]")
+
+        input(f"\nPress Enter to return to menu...")
 
     def handle_complete(self):
         """
-        Handle the complete/mark command with dialog interface.
+        Handle the complete/mark command with console interface.
         """
+        self.console.clear()
+        rprint(f"[{self.styles['header']}]Todo Console App - Mark Task Complete[/]")
+        rprint(f"[{self.styles['header']}]{'='*50}[/]\n")
+
         # Show available tasks to mark
         tasks = self.storage.get_all_tasks()
         if not tasks:
-            self.show_message("Info", "No tasks available")
+            rprint(f"[{self.styles['info']}]No tasks available[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
-        task_list = [(str(task.id), f"{task.id}: {task.title}") for task in tasks]
-        if not task_list:
-            self.show_message("Info", "No tasks available")
-            return
+        rprint("Available tasks:\n")
+        for i, task in enumerate(tasks):
+            status = "✓" if task.completed else "○"
+            status_style = self.styles['completed'] if task.completed else self.styles['pending']
+            rprint(f"[{i+1}] [{status_style}]{status}[/] {task.id}: {task.title}")
 
-        # Get task ID to toggle
-        task_id_str = self.show_simple_input("Enter task ID to mark:")
+        print()  # Add a blank line
+        task_id_str = input("Enter task ID to mark: ").strip()
         try:
             task_id = int(task_id_str)
         except ValueError:
-            self.show_message("Error", "Task ID must be a number")
+            rprint(f"\n[{self.styles['error']}]Error: Task ID must be a number[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
         task = self.storage.get_task(task_id)
         if not task:
-            self.show_message("Error", f"Task with ID {task_id} not found")
+            rprint(f"\n[{self.styles['error']}]Error: Task with ID {task_id} not found[/]")
+            input(f"\nPress Enter to return to menu...")
             return
 
         success = self.storage.toggle_task_status(task_id)
         if success:
-            status = "complete" if task.completed else "pending"
-            self.show_message("Success", f"Task with ID {task_id} marked as {status}")
+            new_status = "complete" if task.completed else "pending"
+            status_style = self.styles['completed'] if task.completed else self.styles['pending']
+            rprint(f"\n[{self.styles['success']}]Task with ID {task_id} marked as [{status_style}]{new_status}[/]")
         else:
-            self.show_message("Error", f"Could not toggle status for task with ID {task_id}")
+            rprint(f"\n[{self.styles['error']}]Could not toggle status for task with ID {task_id}[/]")
+
+        input(f"\nPress Enter to return to menu...")
 
     def run(self):
         """
