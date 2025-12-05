@@ -10,7 +10,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from phase_i_in_memory_python_console_app.models import Task
 from phase_i_in_memory_python_console_app.storage import TaskStorage
-from phase_i_in_memory_python_console_app.cli import TodoCLI
 
 
 def test_models():

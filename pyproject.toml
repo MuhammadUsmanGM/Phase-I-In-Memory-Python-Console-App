@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Phase I: In-Memory Python Console App for Todo Evolution project"
 authors = [{name = "Your Name", email = "your.email@example.com"}]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "rich>=13.0.0",
+    "prompt-toolkit>=3.0.0"
+]
 
 [project.scripts]
 phase1-app = "phase_i_in_memory_python_console_app.main:main"

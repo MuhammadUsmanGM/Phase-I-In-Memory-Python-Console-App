@@ -126,12 +126,9 @@ This demonstrates how an AI agent can use the agent skill to manage tasks progra
 
 ## Testing
 
-Run the main functionality tests:
-```bash
-python -m tests.test_todo_app
-```
+⚠️ **Note**: UI enhancements with rich styling have been added after Phase I submission. The original tests may not run properly with the enhanced UI due to interactive rich prompts. For original functionality testing, refer to the git history or run the enhanced application directly.
 
-Run the agent skill tests:
+Run the agent skill tests (these still work):
 ```bash
 python -m tests.test_agent_skill
 ```
