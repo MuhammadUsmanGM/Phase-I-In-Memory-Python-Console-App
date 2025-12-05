@@ -14,18 +14,18 @@ class TodoAgentSkill:
     Agent skill implementation for todo management that provides programmatic
     access to todo operations for AI agents.
     """
-    
-    def __init__(self):
-        self.storage = TaskStorage()
-    
+
+    def __init__(self, filename: str = "tasks.json"):
+        self.storage = TaskStorage(filename)
+
     def add_task(self, title: str, description: Optional[str] = None) -> Dict[str, Any]:
         """
         Adds a new task to the todo list.
-        
+
         Args:
             title: The task title (1-200 characters)
             description: The task description (max 1000 characters)
-            
+
         Returns:
             Dictionary with 'success' boolean and 'task_id' if successful
         """
@@ -41,11 +41,11 @@ class TodoAgentSkill:
                 "success": False,
                 "error": str(e)
             }
-    
+
     def view_tasks(self) -> Dict[str, Any]:
         """
         Retrieves all tasks from the todo list.
-        
+
         Returns:
             Dictionary with 'success' boolean and 'tasks' list
         """
@@ -59,7 +59,7 @@ class TodoAgentSkill:
                     "description": task.description,
                     "completed": task.completed
                 })
-            
+
             return {
                 "success": True,
                 "tasks": task_list
@@ -69,16 +69,16 @@ class TodoAgentSkill:
                 "success": False,
                 "error": str(e)
             }
-    
+
     def update_task(self, task_id: int, title: Optional[str] = None, description: Optional[str] = None) -> Dict[str, Any]:
         """
         Updates an existing task's title and/or description.
-        
+
         Args:
             task_id: The ID of the task to update
             title: New title for the task (optional)
             description: New description for the task (optional)
-            
+
         Returns:
             Dictionary with 'success' boolean and message
         """
@@ -99,14 +99,14 @@ class TodoAgentSkill:
                 "success": False,
                 "error": str(e)
             }
-    
+
     def delete_task(self, task_id: int) -> Dict[str, Any]:
         """
         Deletes a task from the todo list.
-        
+
         Args:
             task_id: The ID of the task to delete
-            
+
         Returns:
             Dictionary with 'success' boolean and message
         """
@@ -127,14 +127,14 @@ class TodoAgentSkill:
                 "success": False,
                 "error": str(e)
             }
-    
+
     def mark_task_complete(self, task_id: int) -> Dict[str, Any]:
         """
         Toggles the completion status of a task.
-        
+
         Args:
             task_id: The ID of the task to mark
-            
+
         Returns:
             Dictionary with 'success' boolean and message
         """
@@ -145,7 +145,7 @@ class TodoAgentSkill:
                     "success": False,
                     "error": f"Task with ID {task_id} not found"
                 }
-            
+
             success = self.storage.toggle_task_status(task_id)
             if success:
                 status = "complete" if task.completed else "pending"
@@ -163,14 +163,14 @@ class TodoAgentSkill:
                 "success": False,
                 "error": str(e)
             }
-    
+
     def get_task(self, task_id: int) -> Dict[str, Any]:
         """
         Retrieves a specific task by ID.
-        
+
         Args:
             task_id: The ID of the task to retrieve
-            
+
         Returns:
             Dictionary with 'success' boolean and task details
         """
@@ -199,8 +199,8 @@ class TodoAgentSkill:
 
 
 # Convenience function to create a skill instance
-def create_skill() -> TodoAgentSkill:
+def create_skill(filename: str = "tasks.json") -> TodoAgentSkill:
     """
     Creates and returns a new instance of the TodoAgentSkill.
     """
-    return TodoAgentSkill()
+    return TodoAgentSkill(filename)

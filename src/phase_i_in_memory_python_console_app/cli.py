@@ -35,8 +35,8 @@ class TodoCLI:
     Handles user input, command parsing, and output formatting with rich styling and true key navigation.
     """
 
-    def __init__(self):
-        self.storage = TaskStorage()
+    def __init__(self, filename: str = "tasks.json"):
+        self.storage = TaskStorage(filename)
         self.running = True
         self.console = Console()
         self.setup_styling()
@@ -127,8 +127,6 @@ class TodoCLI:
                     result.append(('class:unselected', f'{text}'))
                 result.append(('', '\n'))
 
-            result.append(('', '\n'))
-            result.append(('class:info', 'Or type command directly (e.g., \'add\', \'view\', \'quit\')'))
             return result
 
         # Style for the app
