@@ -249,7 +249,7 @@ class TodoCLI:
 
     def handle_view(self):
         """
-        Handle the view/list command with a styled table.
+        Handle the view/list command with a styled display showing full descriptions.
         """
         self.console.clear()
         rprint(f"[{self.styles['header']}]Todo Console App - Your Tasks[/]")
@@ -262,26 +262,31 @@ class TodoCLI:
             input(f"\nPress Enter to return to menu...")
             return
 
-        table = Table(title="Your Tasks", title_style="bold blue")
-        table.add_column("ID", style="bold", justify="center")
-        table.add_column("Status", justify="center")
-        table.add_column("Title", style="cyan")
-        table.add_column("Description", style="dim")
+        from rich.panel import Panel
+        from rich.columns import Columns
 
-        for task in tasks:
+        for i, task in enumerate(tasks):
             status = "✓" if task.completed else "○"
             status_style = self.styles['completed'] if task.completed else self.styles['pending']
-            title = task.title if len(task.title) <= 25 else task.title[:22] + "..."
-            description = task.description if task.description and len(task.description) <= 30 else (task.description[:27] + "..." if task.description else "")
+            title_style = 'white' if task.completed else 'cyan'
 
-            table.add_row(
-                str(task.id),
-                f"[{status_style}]{status}[/]",
-                f"[{self.styles['title'] if task.completed else 'white'}]{title}[/]",
-                f"[{self.styles['description']}]{description}[/]"
+            # Create a panel for each task to better organize the information
+            task_info = f"[bold]ID: {task.id}[/]\n"
+            task_info += f"[{status_style}]{status}[/] {task.title}\n"
+            task_info += f"[dim]{task.description or 'No description'}[/]" if task.description else f"[dim]No description[/]"
+
+            panel = Panel(
+                task_info,
+                title=f"Task {task.id}",
+                border_style="blue" if not task.completed else "green",
+                expand=False
             )
 
-        self.console.print(table)
+            self.console.print(panel)
+            # Add space between tasks
+            if i < len(tasks) - 1:
+                self.console.print()  # Empty line for spacing
+
         input(f"\nPress Enter to return to menu...")
 
     def handle_update(self):
