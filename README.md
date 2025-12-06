@@ -1,5 +1,5 @@
 # Todo Console App - Phase I
-
+[![Demo Video](https://img.youtube.com/vi/aNeLKW3UwqM/maxresdefault.jpg)](https://youtu.be/aNeLKW3UwqM)
 This is Phase I of the Todo Evolution project: an In-Memory Python Console App. The goal is to create a command-line todo application that stores tasks in memory, implementing all 5 Basic Level features using spec-driven development with Claude Code and Spec-Kit Plus. This implementation also includes reusable intelligence components for bonus points.
 
 ![ToDo Console App](public/ouput.png)
